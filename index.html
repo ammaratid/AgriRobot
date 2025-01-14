@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+    background-image: url('/static/BG1.png'); /* Add your image here */
+    background-size: cover; /* Cover the entire viewport */
+    background-repeat: no-repeat; /* Do not repeat the image */
+    background-position: center; /* Center the image */
+    text-align: center;
+    margin: 0;
+    padding: 0;
+        }
+        h1 {
+            color: #333;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        .main-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .video-container {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #000;
+            margin-right: 20px;
+        }
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .control-panel {
+            width: 300px;
+            height: 560px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            opacity: 0.7;
+        }
+        button {
+            display: inline-block;
+            width: 80px;
+            height: 40px;
+            margin: 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .movement-controls {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            align-items: center; /* Center align buttons */
+            margin-bottom: 20px;
+        }
+        .direction-buttons {
+            display: flex; /* Arrange buttons in a row */
+            justify-content: center; /* Center the row */
+            width: 100%; /* Make sure it takes full width */
+        }
+        .slider-container {
+            margin-top: 20px;
+        }
+        .slider-container input[type="range"] {
+            width: 100%;
+        }
+        .slider-label {
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .servo-control {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Robot Control Panel</h1>
+
+    <div class="main-container">
+        <!-- Video Container for Real-time Inference -->
+        <div class="video-container">
+            <img id="videoFeed" alt="Video Stream">
+        </div>
+
+        <div class="control-panel">
+            <!-- Robot Movement -->
+            <div class="movement-controls">
+                <button onclick="sendCommand('forward')">Forward</button>
+                <div class="direction-buttons">
+                    <button onclick="sendCommand('left')">Left</button>
+                    <button onclick="sendCommand('stop')">Stop</button>
+                    <button onclick="sendCommand('right')">Right</button>
+                </div>
+                <button onclick="sendCommand('backward')">Backward</button>
+            </div>
+
+            <!-- Servo Control -->
+            <div class="servo-control">
+                <button onclick="sendCommand('servo_up')">Servo Up</button><br>
+                <button onclick="sendCommand('servo_left')">Servo Left</button>
+                <button onclick="sendCommand('servo_right')">Servo Right</button><br>
+                <button onclick="sendCommand('servo_down')">Servo Down</button>
+            </div>
+
+            <!-- Speed Slider -->
+            <div class="slider-container">
+                <label class="slider-label" for="speedControl">Speed Control:</label>
+                <input type="range" name="speed" id="speedControl" min="0" max="100" value="50" oninput="adjustSpeed(this.value)">
+                <br>
+                <span id="speedDisplay">50</span>
+                <br>
+                <button onclick="sendCommand('set_speed', document.getElementById('speedControl').value)">Set Speed</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sendCommand(action, speed = 50) {
+            event.preventDefault();  // Prevents default button behavior
+            const params = new URLSearchParams();
+            params.append('action', action);
+            params.append('speed', speed);
+
+            fetch('/move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params.toString()  // Format the data correctly
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);  // Logs 'OK' or error messages
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function adjustSpeed(newSpeed) {
+            document.getElementById('speedDisplay').innerText = newSpeed;
+        }
+
+        // Fetch the video feed URL and assign it to the image element
+        const video = document.getElementById('videoFeed');
+        video.src = "http://192.168.112.119:5000/video_feed"; // Replace with your Raspberry Pi's IP
+    </script>
+</body>
+</html>
